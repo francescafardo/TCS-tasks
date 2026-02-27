@@ -245,7 +245,7 @@ All parameters are in `config.py`. Key settings:
 | `nontgi_warm_first` | `True` | Block order counterbalancing |
 | `com_port` | `'COM6'` | TCS thermode serial port |
 | `simulation` | `True` | Simulate thermode (no hardware) |
-| `vas_enabled` | `True` | Show VAS ratings after each block |
+| `vas_enabled` | `False` | Show VAS ratings after each block (disabled for pilot) |
 | `vas_max_duration` | 8.0 | Timeout per VAS question (s) |
 | `fullscreen` | `False` | Fullscreen display (set `True` for scanner) |
 

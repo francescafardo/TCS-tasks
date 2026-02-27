@@ -37,7 +37,7 @@ CONFIG = {
     'simulation': True,          # True = no thermode commands
 
     # VAS ratings
-    'vas_enabled': True,             # show VAS after each block
+    'vas_enabled': False,            # disabled for pilot
     'vas_max_duration': 8.0,         # seconds per question
     'vas_labels': ['Not at all', 'Extremely'],
 
