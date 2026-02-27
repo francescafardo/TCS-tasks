@@ -195,9 +195,8 @@ python qc_monitor.py data/sub-0001/ses-01/func/sub-0001_ses-01_task-tprf_run-01_
 
 ### Dashboard Panels
 
-1. **Delta waveform** — commanded temperature modulation over time, with sample count
-2. **Zone temperatures** — commanded (solid) vs actual (dashed) for each active zone, with baseline reference line
-3. **Temperature error** — |commanded - actual| per active zone, with 2°C warning threshold
+1. **Zone temperatures** — actual thermode readings (prominent) with commanded temperatures as faint reference lines, per active zone
+2. **Temperature error** — |commanded - actual| per active zone, with 2°C warning threshold
 
 The dashboard updates every 2 seconds by re-reading the TSV file. Thermode data is flushed to disk every ~1 second (every 10 samples at 10 Hz) so the monitor stays current.
 

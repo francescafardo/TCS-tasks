@@ -66,12 +66,11 @@ The monitor auto-detects the most recent thermode TSV in `data/`. To target a sp
 python qc_monitor.py data/sub-0001/ses-01/func/sub-0001_ses-01_task-tprf_run-01_thermode_*.tsv
 ```
 
-The dashboard shows three live panels updated every 2 seconds:
+The dashboard shows two live panels updated every 2 seconds:
 
 | Panel | What to look for |
 |-------|-----------------|
-| **Delta waveform** | Clean triangular wave, 0–20 C range |
-| **Zone temperatures** | Dashed (actual) tracking solid (commanded) closely |
+| **Zone temperatures** | Actual readings (solid) closely following commanded (faint dotted) |
 | **Temperature error** | All zones below the red 2 C warning line |
 
 ### Timing reference
@@ -126,8 +125,7 @@ After each block, verify in the console output:
 
 In the QC monitor dashboard:
 
-- [ ] Delta waveform is a clean triangle (no flat spots or jumps)
-- [ ] Actual temperatures (dashed) closely follow commanded (solid)
+- [ ] Actual temperatures (solid) closely follow commanded (faint dotted)
 - [ ] Temperature error stays below the 2 C red warning line
 - [ ] Only active zones are plotted (inactive zones hidden)
 
