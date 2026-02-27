@@ -9,7 +9,11 @@ CONFIG = {
     'temp_min': 10.0,            # degrees C (safety clamp lower bound)
     'temp_max': 50.0,            # degrees C (safety clamp upper bound)
     'max_delta': 17.5,           # degrees C amplitude
-    'ramp_rate': 1.0,            # degrees C/s (hardware ramp speed)
+    'ramp_rate': 50.0,           # degrees C/s (TCS hardware ramp speed in follow mode)
+                                 # Must be >> waveform rate (~0.9 C/s) so the hardware
+                                 # can reach each 10Hz micro-step within 100ms.
+                                 # 50 C/s accounts for the MRI filter on the TCS cable.
+                                 # Each 0.09 C step takes ~1.8ms at 50 C/s (98ms margin).
     'cycle_duration': 80.0,      # seconds per full triangle cycle
     'cycles_per_block': 8.5,        # 8 full + 1 half = 8 full sweeps each direction
     'baseline_buffer': 30.0,     # seconds of baseline before/after block
