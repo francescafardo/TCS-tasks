@@ -49,15 +49,16 @@ The NonTGI block order (warm-first vs cool-first first) is counterbalanced acros
 Each 80s cycle contains **two full triangle periods** (40s each):
 
 ```
-         20 C                                20 C
-delta    /\          /\          /\          /\
-        /  \        /  \        /  \        /  \
-  0 C  /    \      /    \      /    \      /    \
-            \    /        \  /            \    /
-             \  /          \/              \  /
-              \/                            \/
-       |-- 40s period --|-- 40s period --|
-       |------------ 80s cycle ----------|
+delta        /\              /\
+(C)         /  \            /  \
+ 20        /    \          /    \
+          /      \        /      \
+         /        \      /        \
+  0   --/          \    /          \--
+                    \  /
+                     \/
+        |-- 40s period --|-- 40s period --|
+        |------------ 80s cycle ----------|
 ```
 
 - **Warm-first**: delta starts at 0 and rises (warm zones heat up first)
