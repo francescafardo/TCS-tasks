@@ -42,8 +42,8 @@ def run_block(block_idx, block_type, mask_name, mask_array, warm_first,
     if not warm_first:
         waveform = phase_shift_waveform(waveform)
 
-    # Fixation point (small circle at screen centre)
-    fixation = visual.Circle(win, radius=0.01, edges=32,
+    # Fixation point (circle at screen centre)
+    fixation = visual.Circle(win, radius=0.03, edges=32,
                              lineColor='white', fillColor='lightGrey',
                              pos=(0, 0))
 

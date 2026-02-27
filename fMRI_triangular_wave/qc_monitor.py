@@ -1,10 +1,10 @@
 """
 Real-time QC monitor for thermode experiment.
 
-Displays a live matplotlib dashboard with three panels:
-    1. Delta waveform (temperature modulation over time)
-    2. Zone temperatures (commanded vs actual, active zones only)
-    3. Temperature error per active zone
+Displays a live matplotlib dashboard with two panels:
+    1. Zone temperatures — actual thermode readings (prominent) with
+       commanded temperatures as faint reference lines
+    2. Temperature error — |commanded - actual| per active zone
 
 Usage:
     python qc_monitor.py                        # auto-detect latest thermode file
@@ -162,9 +162,10 @@ def detect_active_zones(data):
 # ---------------------------------------------------------------------------
 
 def create_figure(filepath, sidecar):
-    """Create the 3-panel figure and return (fig, axes, line_objects)."""
-    fig, axes = plt.subplots(3, 1, figsize=(12, 8), sharex=True)
-    fig.subplots_adjust(hspace=0.3, top=0.92, bottom=0.08, left=0.08,
+    """Create the 2-panel figure and return (fig, axes, line_objects)."""
+    fig, axes = plt.subplots(2, 1, figsize=(12, 7), sharex=True,
+                             gridspec_kw={'height_ratios': [3, 1]})
+    fig.subplots_adjust(hspace=0.25, top=0.92, bottom=0.08, left=0.08,
                         right=0.95)
 
     # Build title from sidecar metadata
@@ -176,56 +177,46 @@ def create_figure(filepath, sidecar):
         title = f"QC Monitor — {os.path.basename(filepath)}"
     fig.suptitle(title, fontsize=12, fontweight='bold')
 
-    # --- Top: Delta waveform ---
+    # --- Top: Zone temperatures (actual prominent, commanded faint) ---
     ax0 = axes[0]
-    ax0.set_ylabel('Delta (°C)')
-    ax0.set_ylim(-1, 22)
-    ax0.set_title('Delta waveform', fontsize=10)
+    ax0.set_ylabel('Temperature (°C)')
+    ax0.set_title('Zone temperatures', fontsize=10)
     ax0.grid(True, alpha=0.3)
-    line_delta, = ax0.plot([], [], color='#333333', linewidth=1)
 
-    # --- Middle: Zone temperatures ---
-    ax1 = axes[1]
-    ax1.set_ylabel('Temperature (°C)')
-    ax1.set_title('Zone temperatures (solid=commanded, dashed=actual)',
-                  fontsize=10)
-    ax1.grid(True, alpha=0.3)
-
-    lines_set = []
     lines_act = []
+    lines_set = []
     for z in range(5):
-        ls, = ax1.plot([], [], color=ZONE_COLORS[z], linewidth=1.2,
+        la, = ax0.plot([], [], color=ZONE_COLORS[z], linewidth=1.5,
+                       label=f'{ZONE_LABELS[z]} actual')
+        ls, = ax0.plot([], [], color=ZONE_COLORS[z], linewidth=0.8,
+                       linestyle=':', alpha=0.4,
                        label=f'{ZONE_LABELS[z]} cmd')
-        la, = ax1.plot([], [], color=ZONE_COLORS[z], linewidth=1.0,
-                       linestyle='--', alpha=0.7,
-                       label=f'{ZONE_LABELS[z]} act')
-        lines_set.append(ls)
         lines_act.append(la)
+        lines_set.append(ls)
 
     baseline_temp = sidecar.get('baseline_temp', 30.0) if sidecar else 30.0
-    ax1.axhline(baseline_temp, color='grey', linestyle=':', linewidth=0.8,
-                alpha=0.5, label='baseline')
+    ax0.axhline(baseline_temp, color='grey', linestyle='--', linewidth=0.8,
+                alpha=0.4, label='baseline')
 
     # --- Bottom: Temperature error ---
-    ax2 = axes[2]
-    ax2.set_xlabel('Time from trigger (s)')
-    ax2.set_ylabel('|Cmd − Act| (°C)')
-    ax2.set_title('Temperature error per active zone', fontsize=10)
-    ax2.set_ylim(-0.2, 5)
-    ax2.grid(True, alpha=0.3)
-    ax2.axhline(2.0, color='red', linestyle='--', linewidth=0.8, alpha=0.6,
+    ax1 = axes[1]
+    ax1.set_xlabel('Time from trigger (s)')
+    ax1.set_ylabel('|Cmd − Act| (°C)')
+    ax1.set_title('Temperature error', fontsize=10)
+    ax1.set_ylim(-0.2, 5)
+    ax1.grid(True, alpha=0.3)
+    ax1.axhline(2.0, color='red', linestyle='--', linewidth=0.8, alpha=0.6,
                 label='warning (2°C)')
 
     lines_err = []
     for z in range(5):
-        le, = ax2.plot([], [], color=ZONE_COLORS[z], linewidth=1.0,
+        le, = ax1.plot([], [], color=ZONE_COLORS[z], linewidth=1.0,
                        label=ZONE_LABELS[z])
         lines_err.append(le)
 
     line_objects = {
-        'delta': line_delta,
-        'zone_set': lines_set,
         'zone_act': lines_act,
+        'zone_set': lines_set,
         'zone_err': lines_err,
     }
 
@@ -246,7 +237,6 @@ def make_update(filepath, axes, line_objects, state):
             return []
 
         onset = data['onset']
-        delta = data['delta']
         active = detect_active_zones(data)
 
         # Update x-axis limits
@@ -254,18 +244,13 @@ def make_update(filepath, axes, line_objects, state):
         for ax in axes:
             ax.set_xlim(0, max(t_max + 5, 10))
 
-        # --- Delta waveform ---
-        line_objects['delta'].set_data(onset, delta)
-        axes[0].set_ylim(min(-1, np.min(delta) - 1),
-                         max(22, np.max(delta) + 1))
-
         # --- Zone temperatures ---
         y_min_temp = float('inf')
         y_max_temp = float('-inf')
         for z in range(5):
             if z in active:
-                line_objects['zone_set'][z].set_data(onset, data['zone_set'][z])
                 line_objects['zone_act'][z].set_data(onset, data['zone_act'][z])
+                line_objects['zone_set'][z].set_data(onset, data['zone_set'][z])
                 y_min_temp = min(y_min_temp,
                                  np.min(data['zone_set'][z]),
                                  np.min(data['zone_act'][z]))
@@ -273,25 +258,25 @@ def make_update(filepath, axes, line_objects, state):
                                  np.max(data['zone_set'][z]),
                                  np.max(data['zone_act'][z]))
             else:
-                line_objects['zone_set'][z].set_data([], [])
                 line_objects['zone_act'][z].set_data([], [])
+                line_objects['zone_set'][z].set_data([], [])
 
         if y_min_temp != float('inf'):
             margin = 2
-            axes[1].set_ylim(y_min_temp - margin, y_max_temp + margin)
+            axes[0].set_ylim(y_min_temp - margin, y_max_temp + margin)
 
         # Build legend only once
         if not state.get('legend_set') and active:
             handles = []
             labels = []
             for z in active:
+                handles.append(line_objects['zone_act'][z])
+                labels.append(f'{ZONE_LABELS[z]} actual')
                 handles.append(line_objects['zone_set'][z])
                 labels.append(f'{ZONE_LABELS[z]} cmd')
-                handles.append(line_objects['zone_act'][z])
-                labels.append(f'{ZONE_LABELS[z]} act')
-            axes[1].legend(handles, labels, loc='upper right', fontsize=7,
+            axes[0].legend(handles, labels, loc='upper right', fontsize=7,
                            ncol=len(active))
-            axes[2].legend(loc='upper right', fontsize=7)
+            axes[1].legend(loc='upper right', fontsize=7)
             state['legend_set'] = True
 
         # --- Temperature error ---
@@ -303,7 +288,8 @@ def make_update(filepath, axes, line_objects, state):
                 line_objects['zone_err'][z].set_data([], [])
 
         # Update sample count in title
-        axes[0].set_title(f'Delta waveform ({len(onset)} samples)', fontsize=10)
+        axes[0].set_title(f'Zone temperatures ({len(onset)} samples)',
+                          fontsize=10)
 
         return []
 
