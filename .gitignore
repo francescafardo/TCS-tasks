@@ -29,6 +29,13 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
+# Data output
+data/
+
+# Word documents
+docx/
+~$*.docx
+
 # Python
 __pycache__/
 *.py[cod]
