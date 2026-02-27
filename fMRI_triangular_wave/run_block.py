@@ -29,11 +29,15 @@ def run_block(block_idx, block_type, mask_name, mask_array, warm_first,
         qc_summaries : list of dict
             Per-cycle QC metrics.
     """
-    n_cycles = config['cycles_per_block']
+    import math
+    cycles_total = config['cycles_per_block']   # e.g. 8.5
+    n_full_cycles = int(cycles_total)            # 8
+    frac = cycles_total - n_full_cycles          # 0.5
     update_hz = config['update_hz']
     cycle_duration = config['cycle_duration']
     sample_interval = 1.0 / update_hz
     samples_per_cycle = int(cycle_duration * update_hz)
+    extra_samples = int(round(frac * samples_per_cycle))  # 400 for 0.5
     baseline_temp = config['baseline_temp']
 
     # Generate waveform (same for all cycles in this block)
@@ -51,6 +55,9 @@ def run_block(block_idx, block_type, mask_name, mask_array, warm_first,
     status_text = visual.TextStim(win, text='', pos=(0, -0.35), height=0.03,
                                   color='grey', wrapWidth=1.8)
     direction = 'warm-first' if warm_first else 'cool-first'
+
+    # Polarity of first active zone (for NonTGI warm/cold labelling)
+    active_polarity = next((m for m in mask_array if m != 0), 0)
 
     # Quality control tracker
     qc = ThermalQC(config)
@@ -75,11 +82,19 @@ def run_block(block_idx, block_type, mask_name, mask_array, warm_first,
     stim_onset = global_clock.getTime() - trigger_time
     flush_counter = 0
 
-    for cycle_idx in range(n_cycles):
+    total_cycle_count = math.ceil(cycles_total)  # 9 for 8.5
+
+    for cycle_idx in range(total_cycle_count):
         cycle_clock = core.Clock()
         qc.start_cycle(cycle_idx)
 
-        for sample_idx in range(samples_per_cycle):
+        # Last cycle may be partial (e.g. half-cycle for 8.5)
+        if cycle_idx == n_full_cycles and extra_samples > 0:
+            n_samples_this_cycle = extra_samples
+        else:
+            n_samples_this_cycle = samples_per_cycle
+
+        for sample_idx in range(n_samples_this_cycle):
             target_time = sample_idx * sample_interval
 
             delta = float(waveform[sample_idx])
@@ -96,12 +111,22 @@ def run_block(block_idx, block_type, mask_name, mask_array, warm_first,
             # QC update
             qc.update(t_from_trigger, temps, actual, delta, mask_array)
 
+            # Trial type label for thermode TSV
+            if block_type == 'TGI':
+                trial_label = 'TGI'
+            elif delta * active_polarity > 0:
+                trial_label = 'warm'
+            elif delta * active_polarity < 0:
+                trial_label = 'cold'
+            else:
+                trial_label = 'baseline'
+
             # Write thermode data row (no header; columns in JSON sidecar)
             physio_writer.writerow([
                 f'{t_from_trigger:.4f}',
                 volume,
                 block_idx,
-                block_type,
+                trial_label,
                 cycle_idx,
                 mask_name,
                 int(warm_first),
@@ -119,10 +144,13 @@ def run_block(block_idx, block_type, mask_name, mask_array, warm_first,
 
             # Display
             fixation.draw()
+            cycle_label = (f'{cycle_idx + 1}/{cycles_total}'
+                           if cycle_idx < n_full_cycles
+                           else f'{cycles_total}/{cycles_total}')
             status_text.text = (
                 f"Block {block_idx + 1}/{n_blocks} [{block_type}] "
                 f"({direction}) | "
-                f"Cycle {cycle_idx + 1}/{n_cycles} | "
+                f"Cycle {cycle_label} | "
                 f"{mask_name} | "
                 f"D={delta:.1f} | "
                 f"Z: {temps[0]:.0f} {temps[1]:.0f} {temps[2]:.0f}"
@@ -142,7 +170,8 @@ def run_block(block_idx, block_type, mask_name, mask_array, warm_first,
 
         # End-of-cycle QC summary
         cycle_summary = qc.end_cycle()
-        print(f'  Cycle {cycle_idx + 1}/{n_cycles} QC: '
+        partial_tag = ' (partial)' if cycle_idx == n_full_cycles else ''
+        print(f'  Cycle {cycle_idx + 1}/{total_cycle_count}{partial_tag} QC: '
               f'onset_lat={cycle_summary["onset_latency_s"]:.2f}s, '
               f'ramp={cycle_summary["mean_ramp_rate"]:.2f} deg/s, '
               f'warm={cycle_summary["mean_warming_rate"]:.2f}, '
@@ -204,7 +233,7 @@ def _run_baseline_period(duration, thermode, win, fixation, status_text,
             f'{t_from_trigger:.4f}',
             volume,
             block_idx,
-            f'{block_type}_baseline',
+            'baseline',
             -1,
             mask_name,
             int(warm_first),

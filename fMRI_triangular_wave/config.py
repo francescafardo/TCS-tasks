@@ -11,7 +11,7 @@ CONFIG = {
     'max_delta': 17.5,           # degrees C amplitude
     'ramp_rate': 1.0,            # degrees C/s (hardware ramp speed)
     'cycle_duration': 80.0,      # seconds per full triangle cycle
-    'cycles_per_block': 8,
+    'cycles_per_block': 8.5,        # 8 full + 1 half = 8 full sweeps each direction
     'baseline_buffer': 30.0,     # seconds of baseline before/after block
 
     # Update rate

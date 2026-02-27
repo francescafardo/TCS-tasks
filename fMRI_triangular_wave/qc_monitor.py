@@ -186,16 +186,20 @@ def create_figure(filepath, sidecar):
     lines_act = []
     lines_set = []
     for z in range(5):
-        la, = ax0.plot([], [], color=ZONE_COLORS[z], linewidth=1.5,
+        la, = ax0.plot([], [], color=ZONE_COLORS[z], linewidth=2.5,
                        label=f'{ZONE_LABELS[z]} actual')
-        ls, = ax0.plot([], [], color=ZONE_COLORS[z], linewidth=0.8,
+        ls, = ax0.plot([], [], color=ZONE_COLORS[z], linewidth=1.5,
                        linestyle=':', alpha=0.4,
                        label=f'{ZONE_LABELS[z]} cmd')
         lines_act.append(la)
         lines_set.append(ls)
 
     baseline_temp = sidecar.get('baseline_temp', 30.0) if sidecar else 30.0
-    ax0.axhline(baseline_temp, color='grey', linestyle='--', linewidth=0.8,
+    max_delta = sidecar.get('max_delta', 17.5) if sidecar else 17.5
+    y_min_fixed = baseline_temp - max_delta - 2
+    y_max_fixed = baseline_temp + max_delta + 2
+    ax0.set_ylim(y_min_fixed, y_max_fixed)
+    ax0.axhline(baseline_temp, color='grey', linestyle='--', linewidth=1.5,
                 alpha=0.4, label='baseline')
 
     # --- Bottom: Temperature error ---
@@ -205,12 +209,12 @@ def create_figure(filepath, sidecar):
     ax1.set_title('Temperature error', fontsize=10)
     ax1.set_ylim(-0.2, 5)
     ax1.grid(True, alpha=0.3)
-    ax1.axhline(2.0, color='red', linestyle='--', linewidth=0.8, alpha=0.6,
+    ax1.axhline(2.0, color='red', linestyle='--', linewidth=1.5, alpha=0.6,
                 label='warning (2°C)')
 
     lines_err = []
     for z in range(5):
-        le, = ax1.plot([], [], color=ZONE_COLORS[z], linewidth=1.0,
+        le, = ax1.plot([], [], color=ZONE_COLORS[z], linewidth=2.0,
                        label=ZONE_LABELS[z])
         lines_err.append(le)
 
@@ -245,25 +249,13 @@ def make_update(filepath, axes, line_objects, state):
             ax.set_xlim(0, max(t_max + 5, 10))
 
         # --- Zone temperatures ---
-        y_min_temp = float('inf')
-        y_max_temp = float('-inf')
         for z in range(5):
             if z in active:
                 line_objects['zone_act'][z].set_data(onset, data['zone_act'][z])
                 line_objects['zone_set'][z].set_data(onset, data['zone_set'][z])
-                y_min_temp = min(y_min_temp,
-                                 np.min(data['zone_set'][z]),
-                                 np.min(data['zone_act'][z]))
-                y_max_temp = max(y_max_temp,
-                                 np.max(data['zone_set'][z]),
-                                 np.max(data['zone_act'][z]))
             else:
                 line_objects['zone_act'][z].set_data([], [])
                 line_objects['zone_set'][z].set_data([], [])
-
-        if y_min_temp != float('inf'):
-            margin = 2
-            axes[0].set_ylim(y_min_temp - margin, y_max_temp + margin)
 
         # Build legend only once
         if not state.get('legend_set') and active:
@@ -288,8 +280,25 @@ def make_update(filepath, axes, line_objects, state):
                 line_objects['zone_err'][z].set_data([], [])
 
         # Update sample count in title
-        axes[0].set_title(f'Zone temperatures ({len(onset)} samples)',
-                          fontsize=10)
+        # Cycle counter: count completed cycles from cycle_index column
+        # cycle_index = -1 during baseline, 0-based during stimulation
+        stim_mask = data['cycle_index'] >= 0
+        if np.any(stim_mask):
+            current_cycle = int(data['cycle_index'][stim_mask][-1])
+            # A cycle is "completed" once the next one starts or baseline resumes
+            unique_cycles = set(data['cycle_index'][stim_mask])
+            last_sample_cycle = int(data['cycle_index'][-1])
+            # If last sample is baseline (-1), all seen cycles are done
+            if last_sample_cycle < 0:
+                completed = len(unique_cycles)
+            else:
+                completed = max(0, len(unique_cycles) - 1)
+            total = state.get('total_cycles', '?')
+            axes[0].set_title(
+                f'Zone temperatures — cycle {completed} of {total} completed',
+                fontsize=10)
+        else:
+            axes[0].set_title('Zone temperatures — baseline', fontsize=10)
 
         return []
 
@@ -331,7 +340,9 @@ def main():
 
     # Create figure
     fig, axes, line_objects = create_figure(filepath, sidecar)
-    state = {}
+    state = {
+        'total_cycles': sidecar.get('cycles_per_block', '?') if sidecar else '?',
+    }
 
     update_fn = make_update(filepath, axes, line_objects, state)
 
