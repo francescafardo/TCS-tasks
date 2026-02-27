@@ -8,7 +8,7 @@ CONFIG = {
     'baseline_temp': 30.0,       # degrees C
     'temp_min': 10.0,            # degrees C (safety clamp lower bound)
     'temp_max': 50.0,            # degrees C (safety clamp upper bound)
-    'max_delta': 20.0,           # degrees C amplitude
+    'max_delta': 17.5,           # degrees C amplitude
     'ramp_rate': 1.0,            # degrees C/s (hardware ramp speed)
     'cycle_duration': 80.0,      # seconds per full triangle cycle
     'cycles_per_block': 8,

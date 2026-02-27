@@ -146,6 +146,7 @@ def get_session_info(config):
     dlg2 = gui.Dlg(title='fMRI Triangular Wave — Run Block')
     dlg2.addText(summary)
     dlg2.addField('Run block:', choices=choices)
+    dlg2.addField('Max delta (°C):', config['max_delta'])
     dlg2.addField('COM Port:', config['com_port'])
     dlg2.addField('Simulation:', config['simulation'])
     dlg2.addField('Emulate scanner:', config['emulate'])
@@ -173,10 +174,11 @@ def get_session_info(config):
         'block_type': selected_block['block_type'],
         'mask_name': selected_block['mask_name'],
         'warm_first': selected_block['warm_first'],
-        'com_port': data2[1],
-        'simulation': data2[2],
-        'emulate': data2[3],
-        'fullscreen': data2[4],
+        'max_delta': float(data2[1]),
+        'com_port': data2[2],
+        'simulation': data2[3],
+        'emulate': data2[4],
+        'fullscreen': data2[5],
     }
 
 
@@ -231,7 +233,7 @@ def write_thermode_json(path, config, info):
         json.dump(sidecar, f, indent=2)
 
 
-def wait_for_trigger(config, global_clock):
+def wait_for_trigger(config, global_clock, win):
     """Wait for scanner trigger or space bar, return trigger time."""
     if not config['emulate']:
         print('Waiting for scanner trigger...')
@@ -245,6 +247,14 @@ def wait_for_trigger(config, global_clock):
 
     dummy_wait = config['TR'] * config['dummy_volumes']
     print(f'Waiting {dummy_wait:.1f}s for {config["dummy_volumes"]} dummy volumes...')
+
+    # Show on-screen confirmation during dummy volume wait
+    wait_msg = visual.TextStim(
+        win,
+        text=f'Trigger received.\nWaiting for dummy volumes ({dummy_wait:.0f}s)...',
+        pos=(0, 0), height=0.05, color='white')
+    wait_msg.draw()
+    win.flip()
     core.wait(dummy_wait)
 
     return trigger_time
@@ -255,6 +265,7 @@ def main():
     info = get_session_info(config)
 
     # Apply GUI selections to config
+    config['max_delta'] = info['max_delta']
     config['com_port'] = info['com_port']
     config['simulation'] = info['simulation']
     config['emulate'] = info['emulate']
@@ -323,7 +334,7 @@ def main():
 
     # Global clock and trigger
     global_clock = core.Clock()
-    trigger_time = wait_for_trigger(config, global_clock)
+    trigger_time = wait_for_trigger(config, global_clock, win)
 
     # Run single block
     try:

@@ -6,11 +6,15 @@ import numpy as np
 
 
 def generate_delta_waveform(cycle_duration, update_hz, max_delta=20.0):
-    """Generate one full cycle of a triangle wave as delta values.
+    """Generate one full cycle of a bipolar triangle wave as delta values.
 
-    The waveform rises linearly 0 -> max_delta over quarter-cycle, falls back
-    to 0, rises again, falls again, completing two full triangle periods within
-    one cycle_duration.
+    One cycle (80s) contains one full bipolar period with two 40s halves:
+        0 → +max_delta → 0 → -max_delta → 0
+
+    For a +1 (warm) mask zone with baseline 30 C and max_delta 20 C:
+        30 → 50 → 30 → 10 → 30
+
+    Ramp rate is constant at max_delta / (cycle_duration / 4) = 1 C/s.
 
     Parameters
     ----------
@@ -27,22 +31,24 @@ def generate_delta_waveform(cycle_duration, update_hz, max_delta=20.0):
         1-D array of delta values, length = cycle_duration * update_hz.
     """
     n_samples = int(cycle_duration * update_hz)
-    period = cycle_duration / 2.0  # 40s per triangle period
-    t = np.arange(n_samples) / update_hz  # time in seconds
+    period = cycle_duration  # 80s = one full bipolar period
+    t = np.arange(n_samples) / update_hz
 
-    # Standard triangle wave: period=40s, amplitude=max_delta
-    delta = max_delta * (1.0 - np.abs(2.0 * (t % period) / period - 1.0))
+    # Bipolar triangle: 0 → +A → 0 → -A → 0
+    phase = (t % period) / period
+    shifted = (phase + 0.25) % 1.0
+    delta = max_delta * (1.0 - 2.0 * np.abs(2.0 * shifted - 1.0))
     return delta
 
 
 def phase_shift_waveform(waveform):
     """Shift waveform by half-period for cool-first blocks.
 
-    The triangle wave has period = cycle_duration / 2. Shifting by half a
-    period (= quarter cycle = len//4 samples) moves the waveform so that
-    delta starts at max_delta and decreases, making warm zones cool first.
+    Shifts the bipolar triangle so that delta starts at 0 and goes negative
+    first: 0 → -max_delta → 0 → +max_delta → 0
+    (warm zones cool down first).
     """
-    return np.roll(waveform, len(waveform) // 4)
+    return np.roll(waveform, len(waveform) // 2)
 
 
 def apply_mask(delta, mask, baseline_temp=30.0, temp_min=10.0, temp_max=50.0):
