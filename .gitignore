@@ -1,0 +1,53 @@
+# Folders to exclude for now
+fMRI_exp1_thermotopy/
+fMRI_exp2_thermotopy/
+
+# macOS
+.DS_Store
+__MACOSX/
+.AppleDouble
+.LSOverride
+Icon
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+env/
+venv/
+
+# MATLAB / PsychToolbox
+*.asv
+*.mex*
+*.slx.r*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
