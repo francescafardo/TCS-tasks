@@ -1,7 +1,7 @@
 # Folders to exclude for now
 fMRI_exp1_thermotopy/
 fMRI_exp2_thermotopy/
-Task/
+pressureplate_decision/
 
 # macOS
 .DS_Store
