@@ -30,8 +30,7 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
-# Data output
-data/
+# Data output (tracked)
 
 # Word documents
 docx/

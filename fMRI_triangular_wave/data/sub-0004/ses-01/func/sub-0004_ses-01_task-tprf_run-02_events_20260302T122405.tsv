@@ -1,0 +1,4 @@
+onset	duration	trial_type	block_type	mask_name	warm_first	response_value	response_time
+6.0148	30.0016	baseline	NonTGI	P1_W	0	n/a	n/a
+36.0164	680.0094	stimulation	NonTGI	P1_W	0	n/a	n/a
+716.0258	30.0009	baseline	NonTGI	P1_W	0	n/a	n/a

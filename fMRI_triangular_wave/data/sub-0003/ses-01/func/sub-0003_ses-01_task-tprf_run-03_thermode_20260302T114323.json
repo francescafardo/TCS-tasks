@@ -1,0 +1,33 @@
+{
+  "SamplingFrequency": 10,
+  "StartTime": 0.0,
+  "Columns": [
+    "onset",
+    "volume",
+    "block_index",
+    "block_type",
+    "cycle_index",
+    "mask_name",
+    "warm_first",
+    "delta",
+    "zone1_set",
+    "zone2_set",
+    "zone3_set",
+    "zone4_set",
+    "zone5_set",
+    "zone1_actual",
+    "zone2_actual",
+    "zone3_actual",
+    "zone4_actual",
+    "zone5_actual"
+  ],
+  "block_type": "TGI",
+  "mask_name": "TGI_1",
+  "warm_first": true,
+  "baseline_temp": 30.0,
+  "max_delta": 17.5,
+  "cycle_duration": 80.0,
+  "cycles_per_block": 8.5,
+  "ramp_rate": 50.0,
+  "TR": 1.5
+}

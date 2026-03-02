@@ -1,0 +1,10 @@
+block_type	mask_name	warm_first	cycle_index	onset_latency_s	mean_ramp_rate	std_ramp_rate	mean_warming_rate	mean_cooling_rate	warming_cooling_diff	mean_temp_error	max_temp_error	n_ramp_flags	n_samples
+NonTGI	P1_W	0	0	nan	0.9988	0.2246	1.0089	0.9902	0.0186	0.2648	0.7000	699	799
+NonTGI	P1_W	0	1	nan	0.9929	0.2218	0.9970	0.9889	0.0081	0.2697	0.7400	704	799
+NonTGI	P1_W	0	2	nan	0.9930	0.2680	0.9918	0.9943	-0.0025	0.2684	0.7400	705	799
+NonTGI	P1_W	0	3	nan	0.9958	0.2382	0.9941	0.9977	-0.0036	0.2695	0.6600	704	799
+NonTGI	P1_W	0	4	nan	0.9971	0.1889	0.9915	1.0028	-0.0113	0.2707	0.6500	703	799
+NonTGI	P1_W	0	5	nan	0.9988	0.2138	0.9889	1.0089	-0.0201	0.2709	0.6500	702	799
+NonTGI	P1_W	0	6	nan	0.9791	0.2069	0.9750	0.9832	-0.0082	0.2697	0.6500	716	799
+NonTGI	P1_W	0	7	nan	0.9959	0.1881	0.9946	0.9971	-0.0025	0.2704	0.6500	704	799
+NonTGI	P1_W	0	8	nan	1.0115	0.2088	1.0179	1.0056	0.0123	0.2404	0.6400	345	399
