@@ -32,6 +32,7 @@ import glob as _glob
 from datetime import datetime
 
 from psychopy import visual, event, core, gui
+from psychopy.hardware import keyboard
 
 from config import CONFIG
 from masks import get_mask
@@ -234,13 +235,19 @@ def write_thermode_json(path, config, info):
 
 
 def wait_for_trigger(config, global_clock, win):
-    """Wait for scanner trigger or space bar, return trigger time."""
+    """Wait for scanner trigger or space bar, return trigger time.
+
+    Uses psychopy.hardware.keyboard.Keyboard which listens globally,
+    so the trigger is detected even when the PsychoPy window does not
+    have focus (e.g. when the experimenter is working on display 1).
+    """
+    kb = keyboard.Keyboard()
     if not config['emulate']:
         print('Waiting for scanner trigger...')
-        event.waitKeys(keyList=[config['trigger_key']])
+        kb.waitKeys(keyList=[config['trigger_key']])
     else:
         print('Press space to start...')
-        event.waitKeys(keyList=['space'])
+        kb.waitKeys(keyList=['space'])
 
     trigger_time = global_clock.getTime()
     print(f'Trigger received at {trigger_time:.4f}s')
